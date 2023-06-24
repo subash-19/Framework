@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 import speech_recognition as sr
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,7 @@ app.add_middleware(
 
 @app.post("/record/audio")
 async def record_audio():
+    print("Recording audio...")
     r = sr.Recognizer()
     with sr.Microphone() as source:
         print("Listening....")
@@ -30,3 +32,5 @@ async def record_audio():
 
     return {"query": query}  # Return a JSON response
 
+if __name__ == "__main__":
+    uvicorn.run(app, port=5500)
