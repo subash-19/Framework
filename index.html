@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio to Text</title>
+    <style>
+        .answer-section {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+    </style>
+    <script>
+    function recordAudio() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:8000/record/audio", true);
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+                document.getElementById("query").innerText = response.query;
+                document.getElementById("query-section").style.display = "block";
+
+                // Make text-to-speech request
+                var textToSpeech = {
+                    text: response.query,
+                    voice_id: "gabby"
+                };
+
+                var ttsRequest = new XMLHttpRequest();
+                ttsRequest.open("POST", "https://api.puretalk.ai/tts", true);
+                ttsRequest.setRequestHeader("Content-Type", "application/json");
+
+                ttsRequest.onreadystatechange = function() {
+                    if (ttsRequest.readyState === XMLHttpRequest.DONE && ttsRequest.status === 200) {
+                        var audioData = ttsRequest.response;
+                        var audioElement = document.getElementById("audio");
+                        audioElement.src = URL.createObjectURL(audioData);
+                        audioElement.play();
+                    }
+                };
+
+                ttsRequest.responseType = "blob";
+                ttsRequest.send(JSON.stringify(textToSpeech));
+            }
+        };
+
+        xhr.send();
+    }
+</script>
+
+</head>
+<body>
+    <h1>Audio to Text</h1>
+    <form>
+        <input type="button" value="Record" onclick="recordAudio()">
+    </form>
+
+    <div id="query-section" class="answer-section" style="display: none;">
+        <h2>Query:</h2>
+        <p id="query"></p>
+    </div>
+
+    <audio id="audio" controls></audio>
+</body>
+
+</html>
