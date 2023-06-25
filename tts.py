@@ -1,5 +1,6 @@
-import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 import speech_recognition as sr
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,10 +14,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.post("/record/audio")
-async def record_audio():
-    print("Recording audio...")
+async def record_audio(request: Request):
     r = sr.Recognizer()
     with sr.Microphone() as source:
         print("Listening....")
@@ -28,9 +35,6 @@ async def record_audio():
         print(f"user said: {query}\n")
     except Exception as e:
         print(e)
-        return {"query": "None"}  # Return a JSON response
+        query = "None"
 
-    return {"query": query}  # Return a JSON response
-
-if __name__ == "__main__":
-    uvicorn.run(app, port=5500)
+    return {"query": query}
