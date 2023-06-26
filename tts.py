@@ -24,8 +24,16 @@ app.add_middleware(
 
 templates = Jinja2Templates(directory="templates")
 
+with open("openai_key.txt","r") as f:
+   openai_key = f.read()
+f.close()
+
+with open("pinecone_key.txt","r") as f:
+   pinecone_key = f.read()
+f.close()
+
 import os
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = openai_key
 
 
 embeddings = OpenAIEmbeddings()
@@ -47,7 +55,7 @@ def split_docs(documents,chunk_size=1000,chunk_overlap=20):
 
 # initialize pinecone
 pinecone.init(
-    api_key="da26b242-4825-43e9-b5dd-6a94047d2860",  # find at app.pinecone.io
+    api_key= pinecone_key,  # find at app.pinecone.io
     environment="northamerica-northeast1-gcp"  # next to api key in console
 )
 
