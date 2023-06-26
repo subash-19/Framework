@@ -1,1 +1,4 @@
 __pycache__
+openai_key.txt
+pinecone_key.txt
+test.py
