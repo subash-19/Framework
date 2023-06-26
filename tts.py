@@ -3,6 +3,14 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 import speech_recognition as sr
 from fastapi.middleware.cors import CORSMiddleware
+import openai
+from langchain.embeddings.openai import OpenAIEmbeddings
+import pinecone
+from langchain.vectorstores import Pinecone
+from langchain.llms import OpenAI
+from langchain.chains.question_answering import load_qa_chain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.document_loaders import DirectoryLoader
 
 app = FastAPI()
 
@@ -15,6 +23,59 @@ app.add_middleware(
 )
 
 templates = Jinja2Templates(directory="templates")
+
+import os
+os.environ["OPENAI_API_KEY"] = "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"
+
+
+embeddings = OpenAIEmbeddings()
+
+
+directory = 'data/'
+
+def load_docs(directory):
+  loader = DirectoryLoader(directory)
+  documents = loader.load()
+  return documents
+
+documents = load_docs(directory)
+
+def split_docs(documents,chunk_size=1000,chunk_overlap=20):
+  text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+  docs = text_splitter.split_documents(documents)
+  return docs
+
+# initialize pinecone
+pinecone.init(
+    api_key="da26b242-4825-43e9-b5dd-6a94047d2860",  # find at app.pinecone.io
+    environment="northamerica-northeast1-gcp"  # next to api key in console
+)
+
+index_name = "index"
+
+index = Pinecone.from_documents(docs, embeddings, index_name=index_name)
+
+
+model_name = "text-davinci-002"
+# model_name = "gpt-3.5-turbo"
+# model_name = "gpt-4"
+llm = OpenAI(model_name=model_name)
+chain = load_qa_chain(llm, chain_type="stuff")
+
+def get_similiar_docs(query,k=2,score=False):
+  if score:
+    similar_docs = index.similarity_search_with_score(query,k=k)
+  else:
+    similar_docs = index.similarity_search(query,k=k)
+  return similar_docs
+
+
+def get_answer(query):
+  similar_docs = get_similiar_docs(query)
+  # print(similar_docs)
+  answer =  chain.run(input_documents=similar_docs, question=query)
+  return  answer
+
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -36,5 +97,5 @@ async def record_audio(request: Request):
     except Exception as e:
         print(e)
         query = "None"
-
-    return {"query": query}
+    ans =  get_answer(query)
+    return {"Answer": ans}
