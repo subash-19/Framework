@@ -17,7 +17,7 @@
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
                 var response = JSON.parse(xhr.responseText);
-                document.getElementById("query").innerText = response.query;
+                document.getElementById("query").innerText = response.Answer;
                 document.getElementById("query-section").style.display = "block";
 
                 // Make text-to-speech request
