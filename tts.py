@@ -53,6 +53,8 @@ def split_docs(documents,chunk_size=1000,chunk_overlap=20):
   docs = text_splitter.split_documents(documents)
   return docs
 
+docs = split_docs(documents)
+
 # initialize pinecone
 pinecone.init(
     api_key= pinecone_key,  # find at app.pinecone.io
